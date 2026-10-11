@@ -535,5 +535,63 @@ class TestOidcModeRefusesUserAdmin(unittest.TestCase):
         self.assertEqual(self.res['own_password_status'], 400)
 
 
+class TestProviderSettingsAreNotWiped(unittest.TestCase):
+    """A settings save must not blank a provider key the browser did not send.
+
+    Password fields are often posted empty. That is not the same as the user
+    deleting the key, so the stored key for that provider stays.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.res = _run_local("""
+            import json
+            admin, _user = seed()
+            seeded = admin.post('/api/config', json={
+                'ai_providers': json.dumps([{
+                    'id': 'gemini',
+                    'name': 'Gemini',
+                    'api_type': 'gemini',
+                    'api_key': 'gemini-test-key',
+                    'base_url': '',
+                    'model': 'gemini-2.5-flash',
+                }]),
+                'gemini_api_key': 'gemini-test-key',
+            })
+            # The provider row is posted, but the password input arrived blank.
+            saved = admin.post('/settings', data={
+                'recipe_lang': 'hebrew',
+                'target_language': 'he',
+                'whisper_model': 'small',
+                'max_concurrent_jobs': '3',
+                'provider_id[]': 'gemini',
+                'provider_name[]': 'Gemini',
+                'provider_api_type[]': 'gemini',
+                'provider_api_key[]': '',
+                'provider_base_url[]': '',
+                'provider_model[]': 'gemini-2.5-flash',
+            })
+            config = database.load_config()
+            stored = json.loads(config.get('ai_providers') or '[]')
+            kept = next((p for p in stored if p.get('id') == 'gemini'), {})
+            emit(
+                seeded_status=seeded.status_code,
+                saved_status=saved.status_code,
+                recipe_lang=config.get('recipe_lang'),
+                gemini_api_key=config.get('gemini_api_key'),
+                provider_key=kept.get('api_key'),
+                provider_model=kept.get('model'),
+            )
+        """)
+
+    def test_form_save_keeps_a_blank_posted_provider_key(self):
+        self.assertEqual(self.res['seeded_status'], 200)
+        self.assertIn(self.res['saved_status'], (200, 302))
+        self.assertEqual(self.res['recipe_lang'], 'hebrew')
+        self.assertEqual(self.res['gemini_api_key'], 'gemini-test-key')
+        self.assertEqual(self.res['provider_key'], 'gemini-test-key')
+        self.assertEqual(self.res['provider_model'], 'gemini-2.5-flash')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1202,13 +1202,17 @@ def logout():
     return redirect(url_for('login'))
 
 
-def _providers_from_form(form) -> str:
+def _providers_from_form(form, existing_keys: dict | None = None) -> str:
     """Rebuild the provider registry from the settings form's repeated fields.
 
     The plain-HTML settings page posts one parallel list per column rather than
     JSON, so rows arrive as provider_name[], provider_api_type[] and so on. A
     row with neither a name nor a model is an empty template row the user never
     filled in, and is dropped.
+
+    A blank API key keeps the key already stored for that provider. Browsers
+    omit or clear password inputs, and treating that as "delete the key" is
+    how a save used to wipe a provider that the user had just configured.
     """
     from ai_providers import AiProvider, serialize_providers, slugify
 
@@ -1218,6 +1222,7 @@ def _providers_from_form(form) -> str:
     base_urls = form.getlist('provider_base_url[]')
     models = form.getlist('provider_model[]')
     ids = form.getlist('provider_id[]')
+    existing_keys = existing_keys or {}
 
     providers = []
     seen = set()
@@ -1233,11 +1238,12 @@ def _providers_from_form(form) -> str:
         if provider_id in seen:
             provider_id = f'{provider_id}-{index}'
         seen.add(provider_id)
+        api_key = _at(keys) or existing_keys.get(provider_id, '')
         providers.append(AiProvider(
             id=provider_id,
             name=name or provider_id,
             api_type=_at(api_types),
-            api_key=_at(keys),
+            api_key=api_key,
             base_url=_at(base_urls),
             model=model,
         ))
@@ -1301,34 +1307,43 @@ def settings():
     config = load_config()
 
     if request.method == 'POST':
-        # Update configuration from form
-        config['ai_providers'] = _providers_from_form(request.form)
-        config['ai_extraction_provider'] = request.form.get(
-            'ai_extraction_provider', '')
-        config['transcription_mode'] = request.form.get(
-            'transcription_mode', 'local')
-        config['transcription_provider'] = request.form.get(
-            'transcription_provider', '')
-        config['transcription_model'] = request.form.get(
-            'transcription_model', 'whisper-1')
-        config['recipe_lang'] = request.form.get('recipe_lang', 'hebrew')
-        config['mealie_api_key'] = request.form.get('mealie_api_key', '')
-        config['mealie_host'] = request.form.get('mealie_host', '')
-        config['tandoor_api_key'] = request.form.get('tandoor_api_key', '')
-        config['tandoor_host'] = request.form.get('tandoor_host', '')
-        config['target_language'] = request.form.get('target_language', 'he')
+        # Text fields update only when the form actually sent them. A password
+        # input a browser drops must not be stored as a blank key.
+        if 'provider_name[]' in request.form or 'provider_id[]' in request.form:
+            existing_keys = {}
+            try:
+                stored_providers = json.loads(config.get('ai_providers') or '[]')
+            except (TypeError, ValueError):
+                stored_providers = []
+            if isinstance(stored_providers, list):
+                for record in stored_providers:
+                    if isinstance(record, dict) and record.get('id'):
+                        existing_keys[str(record['id'])] = str(record.get('api_key') or '')
+            config['ai_providers'] = _providers_from_form(request.form, existing_keys)
+        for key in (
+            'ai_extraction_provider',
+            'transcription_mode',
+            'transcription_provider',
+            'transcription_model',
+            'recipe_lang',
+            'mealie_api_key', 'mealie_host',
+            'tandoor_api_key', 'tandoor_host',
+            'target_language',
+            'whisper_model',
+            'hf_token',
+            'yt_dlp_cookies_file',
+            'yt_dlp_cookies_browser',
+            'max_concurrent_jobs',
+        ):
+            if key in request.form:
+                config[key] = request.form.get(key) or ''
+        # Checkbox: present in form data only when checked
         config['tandoor_enabled'] = 'true' if request.form.get('tandoor_enabled') else 'false'
         config['mealie_enabled'] = 'true' if request.form.get('mealie_enabled') else 'false'
-        config['whisper_model'] = request.form.get('whisper_model', 'small')
-        config['hf_token'] = request.form.get('hf_token', '')
         config['nutrition_lookup_enabled'] = 'true' if request.form.get(
             'nutrition_lookup_enabled') else 'false'
-        config['yt_dlp_cookies_file'] = request.form.get('yt_dlp_cookies_file', '')
-        config['yt_dlp_cookies_browser'] = request.form.get('yt_dlp_cookies_browser', '')
-        # Checkbox: present in form data only when checked
         config['confirm_before_upload'] = 'true' if request.form.get(
             'confirm_before_upload') else 'false'
-        config['max_concurrent_jobs'] = request.form.get('max_concurrent_jobs', '3')
 
         save_config(config)
         get_job_manager().refresh_concurrency()
