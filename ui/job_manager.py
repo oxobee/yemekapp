@@ -409,7 +409,10 @@ class JobManager:
             'visual': 'extracting',
             'image': 'extracting',
             'evaluate': 'creating',
-            'preview': AWAITING_APPROVAL,
+            # 'preview' stays a progress message. Moving the job to
+            # awaiting_approval here, before the approval row exists, makes
+            # open_approval treat the second move as a conflict and delete
+            # the row. The sweeper then expires a recipe nobody could approve.
             'upload': UPLOADING,
             'complete': COMPLETED,
             'error': FAILED,
@@ -539,6 +542,7 @@ class JobManager:
                 )
                 conn.commit()
 
+        logger.error(f'[Job] {job_id} failed: {error_message}')
         payload = {'job_id': job_id, 'error': error_message}
         self._emit_to_rooms('job_failed', payload, job_id)
 
@@ -588,6 +592,7 @@ class JobManager:
             user_id=user_id,
         )
 
+        recipe_name = recipe_data.get('name') or (job or {}).get('video_title') or 'A recipe'
         try:
             self.transition(
                 job_id, AWAITING_APPROVAL, percent=90,
@@ -599,16 +604,20 @@ class JobManager:
             from database import delete_pending_upload
             delete_pending_upload(upload_id)
             logger.info(
-                'job %s left awaiting_approval before the preview could open',
-                job_id,
+                f'[Approval] "{recipe_name}" was not held for approval because the job had already moved on.'
             )
             return None
 
-        logger.info(
-            'job %s waiting for approval upload=%s target=%s',
-            job_id, upload_id, output_target,
-        )
-        recipe_name = recipe_data.get('name') or (job or {}).get('video_title') or 'A recipe'
+        if output_target and output_target != 'no target':
+            logger.info(
+                f'[Approval] "{recipe_name}" is ready. Nothing has been sent to {output_target} yet. '
+                'Approve it on the Tasks page. Refreshing the page opens the preview again.'
+            )
+        else:
+            logger.info(
+                f'[Approval] "{recipe_name}" is ready. No recipe manager is enabled, so '
+                'approving it will not send it anywhere. Enable Mealie or Tandoor in Settings.'
+            )
         notify_user(
             user_id,
             title='Recipe needs your approval',
@@ -624,7 +633,9 @@ class JobManager:
         """Approve a pending upload and schedule its upload phase."""
         upload = get_pending_upload(upload_id)
         if not upload or upload['status'] != 'pending':
-            logger.info('approval %s could not be confirmed', upload_id)
+            logger.info(
+                '[Approval] Confirm was ignored. That approval is already closed.',
+            )
             return {'ok': False, 'error': 'not found or already processed'}
 
         if recipe is not None:
@@ -642,7 +653,9 @@ class JobManager:
             return {'ok': False, 'error': 'already processed'}
 
         job_id = upload['job_id']
-        logger.info('job %s approval %s confirmed', job_id, upload_id)
+        recipe_name = _recipe_label(upload.get('recipe_data'), get_job(job_id))
+        target = upload.get('output_target') or 'the recipe manager'
+        logger.info(f'[Approval] "{recipe_name}" approved. Sending it to {target} now.')
         self.enqueue_upload_resume(job_id)
         self.socketio.emit(
             'approval_confirmed',
@@ -656,13 +669,16 @@ class JobManager:
         """Reject a pending upload; its job becomes cancelled."""
         upload = get_pending_upload(upload_id)
         if not upload or upload['status'] != 'pending':
-            logger.info('approval %s could not be rejected', upload_id)
+            logger.info(
+                '[Approval] Cancel was ignored. That approval is already closed.',
+            )
             return {'ok': False, 'error': 'not found or already processed'}
         if not cancel_pending_upload(upload_id):
             return {'ok': False, 'error': 'already processed'}
 
         job_id = upload['job_id']
-        logger.info('job %s approval %s rejected', job_id, upload_id)
+        recipe_name = _recipe_label(upload.get('recipe_data'), get_job(job_id))
+        logger.info(f'[Approval] "{recipe_name}" was cancelled. Nothing was sent.')
         with self._lock:
             if job_id in self.cancellation_flags:
                 self.cancellation_flags[job_id].set()
@@ -757,18 +773,32 @@ class JobManager:
         # (e.g. a crash between the sweeper's two writes).
         expired_job_ids.update(find_stranded_approvals())
         for job_id in sorted(expired_job_ids):
-            if get_job(job_id):
+            job = get_job(job_id)
+            if job:
                 try:
                     self.transition(job_id, EXPIRED,
                                     reason='Approval is no longer open')
-                except InvalidTransition:
+                    label = job.get('video_title') or job_id
                     logger.info(
-                        'job %s was due to expire but had already moved on',
-                        job_id,
+                        f'[Approval] "{label}" closed before it was approved, so nothing was sent.'
+                    )
+                except InvalidTransition:
+                    label = job.get('video_title') or job_id
+                    logger.info(
+                        f'[Approval] "{label}" was due to close, but it had already moved on.'
                     )
         if result.get('requeued'):
             self._broadcast_queue_positions()
         return {**result, 'expired': len(expired_job_ids)}
+
+
+def _recipe_label(recipe_data, job: Optional[dict]) -> str:
+    name = ''
+    if isinstance(recipe_data, dict):
+        name = recipe_data.get('name') or recipe_data.get('title') or ''
+    if not name and job:
+        name = job.get('video_title') or ''
+    return name or 'A recipe'
 
 
 def _relocate_artifacts(job_id: str, image_path: Optional[str],
