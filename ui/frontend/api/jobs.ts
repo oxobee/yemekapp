@@ -111,50 +111,88 @@ Yanıtını SADECE aşağıdaki JSON şemasına uygun bir JSON nesnesi olarak ve
 }`
 
   if (aiConfig.type === 'gemini') {
-    const rawModel = (aiConfig.model || 'gemini-2.0-flash').trim().replace(/^models\//, '')
-    // Try specified model, plus modern Gemini 2.0 / 1.5 variants as fallback
-    const candidates = [
-      { apiVer: 'v1beta', name: rawModel },
-      { apiVer: 'v1beta', name: 'gemini-2.0-flash' },
-      { apiVer: 'v1beta', name: 'gemini-1.5-flash-latest' },
-      { apiVer: 'v1', name: 'gemini-1.5-flash' },
-      { apiVer: 'v1beta', name: 'gemini-1.5-flash' },
-      { apiVer: 'v1beta', name: 'gemini-2.5-flash' },
-    ]
+    let candidateNames: string[] = []
+
+    // 1. Dinamik olarak bu API anahtarına tanımlı modelleri Google'dan sorgula
+    try {
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${aiConfig.key}`)
+      if (listRes.ok) {
+        const listData = await listRes.json()
+        if (Array.isArray(listData?.models)) {
+          const supported = listData.models
+            .filter((m: any) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+            .map((m: any) => String(m.name || '').replace(/^models\//, ''))
+            .filter(Boolean)
+
+          // Flash modellerini öne al, sonra pro, sonra diğerleri
+          supported.sort((a: string, b: string) => {
+            const aFlash = a.includes('flash') ? 1 : 0
+            const bFlash = b.includes('flash') ? 1 : 0
+            return bFlash - aFlash
+          })
+
+          if (supported.length > 0) {
+            candidateNames = supported
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not list Gemini models:', e)
+    }
+
+    // 2. Eğer liste alınamadıysa bilinen güncel modelleri sıra ile dene
+    if (candidateNames.length === 0) {
+      const raw = (aiConfig.model || 'gemini-1.5-flash').trim().replace(/^models\//, '')
+      candidateNames = [
+        raw,
+        'gemini-1.5-flash-8b',
+        'gemini-1.5-flash-002',
+        'gemini-1.5-flash-001',
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-flash',
+        'gemini-2.0-flash-exp',
+        'gemini-1.5-pro',
+        'gemini-pro',
+      ]
+    }
 
     let lastError = ''
-    for (const cand of candidates) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/${cand.apiVer}/models/${cand.name}:generateContent?key=${aiConfig.key}`
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json' },
-          }),
-        })
+    for (const modelName of candidateNames) {
+      const cleanName = modelName.replace(/^models\//, '')
+      for (const apiVer of ['v1beta', 'v1']) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${cleanName}:generateContent?key=${aiConfig.key}`
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: 'application/json' },
+            }),
+          })
 
-        if (!res.ok) {
-          const errText = await res.text()
-          lastError = `Google Gemini hatası (${res.status} [${cand.name}]): ${errText.slice(0, 160)}`
-          if (res.status === 404) continue
-          throw new Error(lastError)
-        }
+          if (!res.ok) {
+            const errText = await res.text()
+            lastError = `Google Gemini hatası (${res.status} [${cleanName}]): ${errText.slice(0, 160)}`
+            // Eğer model bulunamadıysa (404) veya bu sürümde desteklenmiyorsa sıradakine geç
+            if (res.status === 404 || res.status === 400) continue
+            throw new Error(lastError)
+          }
 
-        const data = await res.json()
-        const content = data.candidates?.[0]?.content?.parts?.[0]?.text
-        if (content) {
-          const cleanText = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
-          return JSON.parse(cleanText)
-        }
-      } catch (err: any) {
-        if (err.message && !err.message.includes('404')) {
-          throw err
+          const data = await res.json()
+          const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+          if (content) {
+            const cleanText = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
+            return JSON.parse(cleanText)
+          }
+        } catch (err: any) {
+          if (err.message && !err.message.includes('404') && !err.message.includes('400')) {
+            throw err
+          }
         }
       }
     }
-    throw new Error(lastError || 'Google Gemini geçerli bir yanıt üretemedi.')
+    throw new Error(lastError || 'Google Gemini geçerli bir model bulamadı veya yanıt üretemedi.')
   } else {
     // OpenAI or Groq (openai-compatible)
     const baseUrl = aiConfig.baseUrl || (aiConfig.type === 'groq' ? 'https://api.groq.com/openai/v1' : 'https://api.openai.com/v1')
