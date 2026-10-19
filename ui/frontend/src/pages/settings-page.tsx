@@ -183,11 +183,11 @@ export function SettingsPage() {
       const defaultPresets: AiProvider[] = [
         {
           id: 'gemini-flash',
-          name: 'Google Gemini 1.5 Flash (Önerilen Ücretsiz)',
+          name: 'Google Gemini 2.0 Flash (Önerilen Ücretsiz)',
           api_type: 'gemini',
           api_key: '',
           base_url: '',
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.0-flash',
         },
         {
           id: 'groq-llama',

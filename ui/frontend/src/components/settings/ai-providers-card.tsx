@@ -22,7 +22,7 @@ export const DEFAULT_API_TYPES: Record<string, ApiTypeSpec> = {
     needs_base_url: false,
     default_base_url: '',
     catalog: 'google',
-    example_model: 'gemini-1.5-flash',
+    example_model: 'gemini-2.0-flash',
     key_placeholder: 'AIzaSy...',
     key_hint: 'Google AI Studio (aistudio.google.com) üzerinden ücretsiz alabilirsiniz.',
     key_url: 'https://aistudio.google.com/app/apikey',
@@ -324,11 +324,11 @@ export function AiProvidersCard({
                 ...rows,
                 {
                   id,
-                  name: 'Google Gemini 1.5 Flash',
+                  name: 'Google Gemini 2.0 Flash',
                   api_type: 'gemini',
                   api_key: '',
                   base_url: '',
-                  model: 'gemini-1.5-flash',
+                  model: 'gemini-2.0-flash',
                 },
               ])
             }}

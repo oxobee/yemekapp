@@ -111,23 +111,50 @@ Yanıtını SADECE aşağıdaki JSON şemasına uygun bir JSON nesnesi olarak ve
 }`
 
   if (aiConfig.type === 'gemini') {
-    const model = aiConfig.model || 'gemini-1.5-flash'
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiConfig.key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json' },
-      }),
-    })
-    if (!res.ok) {
-      const err = await res.text()
-      throw new Error(`Google Gemini hatası (${res.status}): ${err.slice(0, 160)}`)
+    const rawModel = (aiConfig.model || 'gemini-2.0-flash').trim().replace(/^models\//, '')
+    // Try specified model, plus modern Gemini 2.0 / 1.5 variants as fallback
+    const candidates = [
+      { apiVer: 'v1beta', name: rawModel },
+      { apiVer: 'v1beta', name: 'gemini-2.0-flash' },
+      { apiVer: 'v1beta', name: 'gemini-1.5-flash-latest' },
+      { apiVer: 'v1', name: 'gemini-1.5-flash' },
+      { apiVer: 'v1beta', name: 'gemini-1.5-flash' },
+      { apiVer: 'v1beta', name: 'gemini-2.5-flash' },
+    ]
+
+    let lastError = ''
+    for (const cand of candidates) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/${cand.apiVer}/models/${cand.name}:generateContent?key=${aiConfig.key}`
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' },
+          }),
+        })
+
+        if (!res.ok) {
+          const errText = await res.text()
+          lastError = `Google Gemini hatası (${res.status} [${cand.name}]): ${errText.slice(0, 160)}`
+          if (res.status === 404) continue
+          throw new Error(lastError)
+        }
+
+        const data = await res.json()
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+        if (content) {
+          const cleanText = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim()
+          return JSON.parse(cleanText)
+        }
+      } catch (err: any) {
+        if (err.message && !err.message.includes('404')) {
+          throw err
+        }
+      }
     }
-    const data = await res.json()
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!content) throw new Error('Google Gemini geçerli bir yanıt üretemedi.')
-    return JSON.parse(content.trim())
+    throw new Error(lastError || 'Google Gemini geçerli bir yanıt üretemedi.')
   } else {
     // OpenAI or Groq (openai-compatible)
     const baseUrl = aiConfig.baseUrl || (aiConfig.type === 'groq' ? 'https://api.groq.com/openai/v1' : 'https://api.openai.com/v1')
