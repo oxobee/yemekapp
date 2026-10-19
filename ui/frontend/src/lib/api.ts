@@ -54,11 +54,17 @@ async function request<T>(
 
 export const api = {
   // ===== Jobs =====
-  createJob: (url: string) =>
-    request<import('@/types').StartJobResult>('/api/jobs', {
+  createJob: (url: string) => {
+    let userConfig: Record<string, unknown> = {}
+    try {
+      const saved = localStorage.getItem('yemekapp_config')
+      if (saved) userConfig = JSON.parse(saved)
+    } catch {}
+    return request<import('@/types').StartJobResult>('/api/jobs', {
       method: 'POST',
-      json: { url },
-    }),
+      json: { url, config: userConfig },
+    })
+  },
 
   createJobsBatch: (urls: string[]) =>
     request<import('@/types').BatchStartResult>('/api/jobs/batch', {
