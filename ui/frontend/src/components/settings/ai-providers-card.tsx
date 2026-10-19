@@ -78,7 +78,7 @@ function ModelField({
         ))}
       </datalist>
       <p className="text-xs text-muted-foreground">
-        Any model name works. Suggestions come from models.dev.
+        İstediğiniz model adını yazabilirsiniz.
       </p>
     </div>
   )
@@ -130,19 +130,16 @@ export function AiProvidersCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ServerIcon className="size-4" />
-          AI Providers
+          Yapay Zeka Sağlayıcıları (AI)
         </CardTitle>
         <CardDescription>
-          The models this instance can reach. A provider is an API dialect, a key, a
-          model name and — for OpenAI-compatible endpoints — a base URL, which between
-          them cover OpenAI, Gemini, Claude, OpenRouter, Groq, a local Ollama and
-          anything else speaking one of those dialects.
+          Bu uygulamanın tarif çıkarmak için kullanacağı yapay zeka modelleri. OpenAI, Gemini, Claude, OpenRouter, Groq veya yerel Ollama/vLLM modellerini ekleyebilirsiniz.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {rows.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            No providers yet. Add one to start extracting recipes.
+            Henüz sağlayıcı eklenmedi. Tarif çıkarabilmek için lütfen bir sağlayıcı ekleyin.
           </p>
         )}
 
@@ -155,7 +152,7 @@ export function AiProvidersCard({
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label>Name</Label>
+                  <Label>Sağlayıcı Adı</Label>
                   <Input
                     type="text"
                     placeholder="OpenAI"
@@ -175,7 +172,7 @@ export function AiProvidersCard({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label>API type</Label>
+                  <Label>API Türü</Label>
                   <Select
                     value={provider.api_type}
                     onValueChange={v => update(index, { api_type: v })}
@@ -196,7 +193,7 @@ export function AiProvidersCard({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label>API key</Label>
+                  <Label>API Anahtarı</Label>
                   <Input
                     type="password"
                     placeholder={spec?.key_placeholder || 'sk-...'}
@@ -226,13 +223,13 @@ export function AiProvidersCard({
                   catalog={catalogFor(provider)}
                   value={provider.model}
                   onChange={model => update(index, { model })}
-                  placeholder={spec?.example_model ?? 'model-name'}
+                  placeholder={spec?.example_model ?? 'model-adı'}
                 />
               </div>
 
               {spec?.needs_base_url && (
                 <div className="flex flex-col gap-1.5">
-                  <Label>Base URL</Label>
+                  <Label>Temel URL (Base URL)</Label>
                   <Input
                     type="url"
                     placeholder={spec.default_base_url || 'https://api.example.com/v1'}
@@ -243,8 +240,7 @@ export function AiProvidersCard({
                     onChange={e => update(index, { base_url: e.target.value })}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Where this endpoint lives. A local server (Ollama, LM Studio,
-                    vLLM) needs no API key.
+                    Uç noktanın adresi. Yerel bir sunucu (Ollama, LM Studio) için API anahtarı gerekmeyebilir.
                   </p>
                 </div>
               )}
@@ -257,7 +253,7 @@ export function AiProvidersCard({
                   onClick={() => onChange(rows.filter((_, i) => i !== index))}
                 >
                   <Trash2Icon />
-                  Remove
+                  Kaldır
                 </Button>
               </div>
             </div>
@@ -267,7 +263,7 @@ export function AiProvidersCard({
         <div>
           <Button type="button" variant="secondary" onClick={add}>
             <PlusIcon />
-            Add provider
+            Sağlayıcı Ekle
           </Button>
         </div>
       </CardContent>

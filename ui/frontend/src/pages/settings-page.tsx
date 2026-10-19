@@ -13,7 +13,6 @@ import {
   UploadIcon,
   Trash2Icon,
   DownloadIcon,
-  UsersIcon,
   UtensilsIcon,
 } from 'lucide-react'
 
@@ -255,7 +254,7 @@ export function SettingsPage() {
 
   if (sessionLoading || (isAdmin && configLoading)) {
     return (
-      <div className="p-6 text-muted-foreground text-sm">Loading settings…</div>
+      <div className="p-6 text-muted-foreground text-sm">Ayarlar yükleniyor…</div>
     )
   }
 
@@ -265,9 +264,9 @@ export function SettingsPage() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-6 flex flex-col gap-6">
         <div>
-          <h1 className="text-xl font-semibold">Settings</h1>
+          <h1 className="text-xl font-semibold">Ayarlar</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Extraction settings are managed by an administrator.
+            Tarif çıkarma ve sistem ayarları yönetici tarafından yapılandırılır.
           </p>
         </div>
         <NotificationsCard />
@@ -279,8 +278,8 @@ export function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 pb-24 flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Configure your Pick-a-Recipe application</p>
+        <h1 className="text-xl font-semibold">Ayarlar</h1>
+        <p className="text-sm text-muted-foreground mt-1">YemekApp uygulamasını yapılandırın</p>
       </div>
 
       <AiProvidersCard providers={providers} onChange={setProviders} />
@@ -290,16 +289,14 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BrainIcon className="size-4" />
-            AI Extraction
+            Yapay Zeka ile Tarif Çıkarma
           </CardTitle>
           <CardDescription>
-            Which of the providers above turns raw video and page content into a
-            structured recipe. It also reads on-screen text and picks the dish photo,
-            so it needs a model that can see images.
+            Ham video ve web içeriğini tarif formatına dönüştürecek sağlayıcı. Ekrandaki yazıları okuyup kapak fotoğrafını seçebilmesi için görsel yetenekli bir model önerilir.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Field label="Provider">
+          <Field label="Sağlayıcı (Provider)">
             <ProviderPicker
               providers={providerRows}
               value={extractionProvider}
@@ -314,11 +311,10 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UtensilsIcon className="size-4" />
-            Nutrition lookup
+            Besin Değerleri Analizi
           </CardTitle>
           <CardDescription>
-            Ingredients are costed from a built-in table first. Anything it does not
-            recognise can be looked up live in Open Food Facts.
+            Malzemeler önce yerel besin tablosundan taranır. Tanınmayan malzemeler Open Food Facts üzerinden canlı olarak sorgulanabilir.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -332,21 +328,10 @@ export function SettingsPage() {
             />
             <div>
               <Label htmlFor="nutrition_lookup_enabled">
-                Look unknown ingredients up in Open Food Facts
+                Tanınmayan malzemeleri Open Food Facts ile ara
               </Label>
               <p className="text-xs text-muted-foreground">
-                An{' '}
-                <a
-                  href="https://world.openfoodfacts.org/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-2 hover:text-foreground"
-                >
-                  open food database
-                </a>{' '}
-                with worldwide coverage. No API key or account needed. Turn this
-                off for a fully offline instance; the built-in table keeps
-                working either way.
+                Dünya çapında açık gıda veritabanı. API anahtarı gerektirmez.
               </p>
             </div>
           </div>
@@ -358,32 +343,32 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LanguagesIcon className="size-4" />
-            Recipe Language
+            Tarif Dili
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
-            label="Recipe Language"
-            hint="Language the final recipe is written in."
+            label="Tarif Dili"
+            hint="Oluşturulan nihai tarifin yazılacağı dil (örn: turkish, english)."
           >
             <Input
               type="text"
-              placeholder="hebrew"
+              placeholder="turkish"
               value={get('recipe_lang')}
               onChange={e => set('recipe_lang', e.target.value)}
             />
           </Field>
           <Field
-            label="Transcription Code"
+            label="Transkripsiyon / Dil Kodu"
             hint={
               <>
-                Two-letter code matching the recipe language (e.g. <code className="font-mono text-xs">he</code>, <code className="font-mono text-xs">en</code>).
+                Tarif diline karşılık gelen iki harfli kod (örn. <code className="font-mono text-xs">tr</code>, <code className="font-mono text-xs">en</code>).
               </>
             }
           >
             <Input
               type="text"
-              placeholder="he"
+              placeholder="tr"
               value={get('target_language')}
               onChange={e => set('target_language', e.target.value)}
             />
@@ -396,10 +381,10 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <SendIcon className="size-4" />
-            Recipe Export
+            Tarif Aktarımı (Mealie / Tandoor)
           </CardTitle>
           <CardDescription>
-            Where finished recipes get uploaded. Enable both to send every recipe to both managers.
+            Hazırlanan tariflerin otomatik olarak yükleneceği tarif yöneticileri.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -414,15 +399,15 @@ export function SettingsPage() {
                     onCheckedChange={checked =>
                       set('mealie_enabled', checked ? 'true' : 'false')
                     }
-                    aria-label="Enable Mealie export"
+                    aria-label="Mealie aktarımını etkinleştir"
                   />
                 </div>
                 <CardDescription className="text-xs">
-                  {mealieEnabled ? 'Enabled' : 'Disabled'}
+                  {mealieEnabled ? 'Etkin' : 'Devre Dışı'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Field label="Mealie URL">
+                <Field label="Mealie Adresi (URL)">
                   <Input
                     type="url"
                     placeholder="http://localhost:9925"
@@ -431,10 +416,10 @@ export function SettingsPage() {
                     onChange={e => set('mealie_host', e.target.value)}
                   />
                 </Field>
-                <Field label="Mealie API Key">
+                <Field label="Mealie API Anahtarı">
                   <Input
                     type="password"
-                    placeholder="Your Mealie API key"
+                    placeholder="Mealie API anahtarınız"
                     autoComplete="off"
                     value={get('mealie_api_key')}
                     onChange={e => set('mealie_api_key', e.target.value)}
@@ -453,15 +438,15 @@ export function SettingsPage() {
                     onCheckedChange={checked =>
                       set('tandoor_enabled', checked ? 'true' : 'false')
                     }
-                    aria-label="Enable Tandoor export"
+                    aria-label="Tandoor aktarımını etkinleştir"
                   />
                 </div>
                 <CardDescription className="text-xs">
-                  {tandoorEnabled ? 'Enabled' : 'Disabled'}
+                  {tandoorEnabled ? 'Etkin' : 'Devre Dışı'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Field label="Tandoor URL">
+                <Field label="Tandoor Adresi (URL)">
                   <Input
                     type="url"
                     placeholder="https://tandoor.example.com"
@@ -470,10 +455,10 @@ export function SettingsPage() {
                     onChange={e => set('tandoor_host', e.target.value)}
                   />
                 </Field>
-                <Field label="Tandoor API Key">
+                <Field label="Tandoor API Anahtarı">
                   <Input
                     type="password"
-                    placeholder="Your Tandoor API key"
+                    placeholder="Tandoor API anahtarınız"
                     autoComplete="off"
                     value={get('tandoor_api_key')}
                     onChange={e => set('tandoor_api_key', e.target.value)}
@@ -485,7 +470,7 @@ export function SettingsPage() {
 
           {!mealieEnabled && !tandoorEnabled && (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
-              <strong>No recipe manager is enabled.</strong> Recipes will not be uploaded anywhere until you enable Mealie or Tandoor.
+              <strong>Herhangi bir tarif yöneticisi seçilmedi.</strong> Mealie veya Tandoor etkinleştirilmediği sürece tarifler sadece bu uygulama içinde saklanır.
             </div>
           )}
 
@@ -498,8 +483,8 @@ export function SettingsPage() {
               }
             />
             <div>
-              <Label htmlFor="confirm_before_upload">Ask me before uploading</Label>
-              <FieldHint>Show a preview of the recipe first, then upload once you confirm.</FieldHint>
+              <Label htmlFor="confirm_before_upload">Aktarmadan önce onayımı iste</Label>
+              <FieldHint>Önce tarifin önizlemesini gösterir, onayınızdan sonra dış sisteme aktarır.</FieldHint>
             </div>
           </div>
         </CardContent>
@@ -510,18 +495,14 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MicIcon className="size-4" />
-            Speech to Text
+            Ses Tanıma (Konuşmayı Metne Dönüştürme)
           </CardTitle>
           <CardDescription>
-            Turning the video&apos;s audio into text. Whisper runs on this server and
-            needs no API; a provider transcribes over the network instead, which is
-            faster on a small machine. Off skips audio entirely, so Whisper is never
-            loaded. Use it when the only configured provider cannot transcribe and
-            the local model is too heavy for this machine.
+            Videodaki konuşmayı metne çevirme ayarları. Yerel Whisper makinenizde çalışır ve API gerektirmez. İsteğe bağlı olarak bir bulut AI sağlayıcısı da kullanabilirsiniz.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Field label="Transcribe with">
+          <Field label="Ses Tanıma Yöntemi">
             <Select
               value={transcriptionMode}
               onValueChange={v => set('transcription_mode', v)}
@@ -530,17 +511,16 @@ export function SettingsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="off">Off (on-screen text only)</SelectItem>
-                <SelectItem value="local">Whisper on this server (no API needed)</SelectItem>
-                <SelectItem value="provider">One of the AI providers above</SelectItem>
+                <SelectItem value="off">Kapalı (yalnızca ekrandaki metinler)</SelectItem>
+                <SelectItem value="local">Bu sunucuda yerel Whisper (API gerekmez)</SelectItem>
+                <SelectItem value="provider">Yukarıdaki yapay zeka sağlayıcılarından biri</SelectItem>
               </SelectContent>
             </Select>
           </Field>
 
           {transcriptionMode === 'off' ? (
             <p className="text-xs text-muted-foreground">
-              Audio is ignored. Recipes are built from on-screen text and the
-              description, and Whisper is not loaded.
+              Ses yoksayılır. Tarifler yalnızca ekrandaki metin ve video açıklamasından çıkarılır.
             </p>
           ) : transcriptionMode === 'local' ? (
             <>
@@ -556,21 +536,20 @@ export function SettingsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tiny">Tiny (fastest, least accurate)</SelectItem>
+                    <SelectItem value="tiny">Tiny (en hızlı, en düşük doğruluk)</SelectItem>
                     <SelectItem value="base">Base</SelectItem>
-                    <SelectItem value="small">Small (recommended)</SelectItem>
+                    <SelectItem value="small">Small (önerilen)</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="large-v3">Large v3 (slowest, most accurate)</SelectItem>
+                    <SelectItem value="large-v3">Large v3 (en yavaş, en yüksek doğruluk)</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
 
               <Field
-                label="HuggingFace token"
+                label="HuggingFace Belirteci (Token)"
                 hint={
                   <>
-                    Optional, and not an AI provider key: it only downloads the Whisper
-                    weights faster and at a higher rate limit. Get one at{' '}
+                    İsteğe bağlıdır. Whisper model ağırlıklarını daha hızlı indirmek için bir belirteç ekleyebilirsiniz:{' '}
                     <a
                       href="https://huggingface.co/settings/tokens"
                       target="_blank"
@@ -594,19 +573,19 @@ export function SettingsPage() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field
-                  label="Provider"
-                  hint="Only providers with an OpenAI-compatible audio endpoint can transcribe."
+                  label="Sağlayıcı"
+                  hint="Yalnızca ses uç noktasına sahip sağlayıcılar kullanılabilir."
                 >
                   <ProviderPicker
                     providers={providerRows.filter(p => AUDIO_API_TYPES.includes(p.api_type))}
                     value={get('transcription_provider')}
                     onChange={v => set('transcription_provider', v)}
-                    emptyLabel="No provider with an audio endpoint"
+                    emptyLabel="Ses uç noktasına sahip sağlayıcı bulunamadı"
                   />
                 </Field>
                 <Field
                   label="Model"
-                  hint="For example whisper-1, gpt-4o-transcribe or whisper-large-v3."
+                  hint="Örneğin whisper-1 veya whisper-large-v3."
                 >
                   <Input
                     type="text"
@@ -620,8 +599,7 @@ export function SettingsPage() {
                 </Field>
               </div>
               <p className="text-xs text-muted-foreground">
-                If the provider fails, the job falls back to Whisper on this server
-                rather than losing the audio.
+                Sağlayıcı hata verirse işlem otomatik olarak sunucudaki yerel Whisper'a devredilir.
               </p>
             </>
           )}
@@ -633,26 +611,26 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <VideoIcon className="size-4" />
-            Video Downloads (YouTube, Instagram, etc.)
+            Video İndirme Ayarları (YouTube, Instagram vb.)
           </CardTitle>
           <CardDescription>
-            Configure authentication when downloads fail. YouTube may show bot-check errors; Instagram may block anonymous requests.
+            İndirme sırasında bot doğrulaması veya oturum gerektiren durumlar için çerez yapılandırması.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Field
-            label="Extract Cookies from Browser"
-            hint="Automatically extract cookies from a browser installed on the server. Only works if Pick-a-Recipe runs on the same machine as your browser (not in Docker)."
+            label="Tarayıcıdan Çerezleri Çek"
+            hint="Sunucuda yüklü tarayıcıdan çerezleri otomatik alır."
           >
             <Select
               value={get('yt_dlp_cookies_browser') || ''}
               onValueChange={v => set('yt_dlp_cookies_browser', v)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="None (disabled)" />
+                <SelectValue placeholder="Yok (Devre dışı)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None (disabled)</SelectItem>
+                <SelectItem value="">Yok (Devre dışı)</SelectItem>
                 <SelectItem value="chrome">Chrome</SelectItem>
                 <SelectItem value="firefox">Firefox</SelectItem>
                 <SelectItem value="safari">Safari</SelectItem>
@@ -666,7 +644,7 @@ export function SettingsPage() {
           </Field>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Upload Cookies File</Label>
+            <Label>Cookies Dosyası Yükle</Label>
             <div className="flex items-center gap-3 flex-wrap">
               <Button
                 variant="outline"
@@ -675,34 +653,34 @@ export function SettingsPage() {
                 onClick={() => cookiesFileRef.current?.click()}
               >
                 <UploadIcon />
-                {cookiesUploading ? 'Uploading…' : 'Choose cookies.txt file'}
+                {cookiesUploading ? 'Yükleniyor…' : 'cookies.txt dosyası seçin'}
               </Button>
               {hasCookiesFile && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm">
                       <Trash2Icon />
-                      Delete cookies
+                      Cookies sil
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Delete cookies file?</AlertDialogTitle>
+                      <AlertDialogTitle>Cookies dosyası silinsin mi?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will remove the uploaded cookies file. Downloads that required authentication may start failing.
+                        Yüklenen çerez dosyası silinir.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>İptal</AlertDialogCancel>
                       <AlertDialogAction variant="destructive" onClick={handleDeleteCookies}>
-                        Delete
+                        Sil
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               )}
               <span className="text-sm text-muted-foreground">
-                {hasCookiesFile ? 'Cookies file configured' : 'No cookies file uploaded'}
+                {hasCookiesFile ? 'Çerez dosyası yüklü' : 'Çerez dosyası yüklenmedi'}
               </span>
             </div>
             <input
@@ -712,27 +690,6 @@ export function SettingsPage() {
               className="hidden"
               onChange={handleCookiesUpload}
             />
-            <FieldHint>
-              Upload a Netscape-format cookies.txt file exported from your browser.{' '}
-              <a
-                href="https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
-                How to export cookies
-              </a>
-            </FieldHint>
-          </div>
-
-          <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">How to get cookies:</p>
-            <ol className="list-decimal list-inside space-y-0.5">
-              <li>Install a browser extension like "Get cookies.txt LOCALLY" or "cookies.txt"</li>
-              <li>Log into the video site in your browser (YouTube, Instagram, etc.)</li>
-              <li>Use the extension to export cookies for that site</li>
-              <li>Click "Choose cookies.txt file" above to upload the exported file</li>
-            </ol>
           </div>
         </CardContent>
       </Card>
@@ -742,13 +699,13 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ListIcon className="size-4" />
-            Queue
+            Görev Kuyruğu
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <Field
-            label="Max Concurrent Jobs"
-            hint="Override with the MAX_CONCURRENT_JOBS environment variable."
+            label="Maksimum Eşzamanlı Görev"
+            hint="Aynı anda çalıştırılacak en fazla işlem sayısı."
           >
             <Input
               type="number"
@@ -774,31 +731,15 @@ export function SettingsPage() {
         </>
       )}
 
-      {!localAuth && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UsersIcon className="size-4" />
-              Accounts
-            </CardTitle>
-            <CardDescription>
-              Sign-in, accounts and admin rights come from your identity
-              provider. Add or remove people there, and use its groups to
-              decide who administers this instance.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
       {/* Backup */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DatabaseBackupIcon className="size-4" />
-            Backup Settings
+            Yedekleme ve Geri Yükleme
           </CardTitle>
           <CardDescription>
-            Download your settings as a JSON file or restore them from a previous backup.
+            Tüm ayarlarınızı JSON dosyası olarak indirin veya yedekten geri yükleyin.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -806,16 +747,16 @@ export function SettingsPage() {
             <div className="flex flex-col gap-1.5">
               <Button variant="outline" onClick={handleExport}>
                 <DownloadIcon />
-                Export
+                Dışa Aktar
               </Button>
-              <FieldHint>Saves everything, including API keys, to a file on your device.</FieldHint>
+              <FieldHint>API anahtarları dahil tüm ayarları bir dosyaya kaydeder.</FieldHint>
             </div>
             <div className="flex flex-col gap-1.5">
               <Button variant="outline" onClick={() => importFileRef.current?.click()}>
                 <UploadIcon />
-                Import
+                İçe Aktar
               </Button>
-              <FieldHint>Restore from a previously exported file.</FieldHint>
+              <FieldHint>Önceden dışa aktarılmış bir dosyadan geri yükler.</FieldHint>
               <input
                 ref={importFileRef}
                 type="file"
@@ -833,7 +774,7 @@ export function SettingsPage() {
         <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-end border-t border-border bg-background/90 px-4 py-3 backdrop-blur-sm">
           <Button onClick={handleSave} disabled={saving}>
             <SaveIcon />
-            {saving ? 'Saving…' : 'Save Settings'}
+            {saving ? 'Kaydediliyor…' : 'Ayarları Kaydet'}
           </Button>
         </div>
       )}

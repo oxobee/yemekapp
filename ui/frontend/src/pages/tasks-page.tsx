@@ -108,30 +108,30 @@ const BUCKET_ORDER: Record<RowBucket, number> = {
 }
 
 const GROUP_LABEL: Record<RowBucket, string> = {
-  approval: 'Needs you',
-  running: 'In flight',
-  queued: 'In flight',
-  done: 'Settled',
-  failed: 'Settled',
-  cancelled: 'Settled',
+  approval: 'İnceleme Bekleyenler',
+  running: 'İşleniyor',
+  queued: 'Sırada',
+  done: 'Tamamlandı',
+  failed: 'Başarısız',
+  cancelled: 'İptal Edildi',
 }
 
 const STATUS_DISPLAY: Record<string, { label: string; variant: React.ComponentProps<typeof Badge>['variant']; className?: string }> = {
-  queued:            { label: 'Queued',          variant: 'secondary' },
-  pending:           { label: 'Queued',          variant: 'secondary' },
-  running:           { label: 'Processing',      variant: 'default' },
-  downloading:       { label: 'Downloading',     variant: 'default' },
-  transcribing:      { label: 'Transcribing',    variant: 'default' },
-  extracting:        { label: 'Extracting',      variant: 'default' },
-  creating:          { label: 'Creating recipe', variant: 'default' },
-  processing:        { label: 'Processing',      variant: 'default' },
-  uploading:         { label: 'Uploading',       variant: 'default' },
-  awaiting_approval: { label: 'Needs approval',  variant: 'outline', className: 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-  success:           { label: 'Done',            variant: 'outline', className: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-  completed:         { label: 'Done',            variant: 'outline', className: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-  failed:            { label: 'Failed',          variant: 'destructive' },
-  cancelled:         { label: 'Cancelled',       variant: 'outline' },
-  expired:           { label: 'Expired',         variant: 'outline' },
+  queued:            { label: 'Sırada',           variant: 'secondary' },
+  pending:           { label: 'Sırada',           variant: 'secondary' },
+  running:           { label: 'İşleniyor',        variant: 'default' },
+  downloading:       { label: 'İndiriliyor',      variant: 'default' },
+  transcribing:      { label: 'Ses Çözümleniyor', variant: 'default' },
+  extracting:        { label: 'Tarif Çıkarılıyor',variant: 'default' },
+  creating:          { label: 'Oluşturuluyor',    variant: 'default' },
+  processing:        { label: 'İşleniyor',        variant: 'default' },
+  uploading:         { label: 'Yükleniyor',       variant: 'default' },
+  awaiting_approval: { label: 'Onay Bekliyor',    variant: 'outline', className: 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+  success:           { label: 'Tamamlandı',       variant: 'outline', className: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  completed:         { label: 'Tamamlandı',       variant: 'outline', className: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  failed:            { label: 'Başarısız',        variant: 'destructive' },
+  cancelled:         { label: 'İptal Edildi',     variant: 'outline' },
+  expired:           { label: 'Süresi Doldu',     variant: 'outline' },
 }
 
 type FilterBucket = '' | 'approval' | 'running' | 'queued' | 'done' | 'failed' | 'cancelled'
@@ -325,14 +325,14 @@ function DeleteRowDialog({ row, onClose, onConfirm }: DeleteRowDialogProps) {
     <AlertDialog open={row !== null} onOpenChange={(open) => { if (!open) onClose() }}>
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete item?</AlertDialogTitle>
+          <AlertDialogTitle>Öğe silinsin mi?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone.
+            Bu işlem geri alınamaz.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogCancel onClick={onClose}>İptal</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onConfirm}>Sil</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -351,14 +351,14 @@ function BulkDeleteDialog({ count, open, onClose, onConfirm }: BulkDeleteDialogP
     <AlertDialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {count} items?</AlertDialogTitle>
+          <AlertDialogTitle>{count} öğe silinsin mi?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone.
+            Bu işlem geri alınamaz.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirm}>Delete all</AlertDialogAction>
+          <AlertDialogCancel onClick={onClose}>İptal</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onConfirm}>Tümünü sil</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -860,13 +860,13 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
 // ===== Main page =====
 
 const FILTER_OPTIONS: { value: FilterBucket; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'approval', label: 'Needs approval' },
-  { value: 'running', label: 'Running' },
-  { value: 'queued', label: 'Queued' },
-  { value: 'done', label: 'Done' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: '', label: 'Tümü' },
+  { value: 'approval', label: 'Onay Bekleyenler' },
+  { value: 'running', label: 'Çalışanlar' },
+  { value: 'queued', label: 'Sırada' },
+  { value: 'done', label: 'Tamamlananlar' },
+  { value: 'failed', label: 'Başarısız' },
+  { value: 'cancelled', label: 'İptal Edildi' },
 ]
 
 export function TasksPage() {
@@ -1105,9 +1105,9 @@ export function TasksPage() {
   return (
     <div className="flex flex-col gap-4 p-4 sm:p-6">
       <div>
-        <h1 className="text-xl font-semibold">Tasks</h1>
+        <h1 className="text-xl font-semibold">Görevler</h1>
         <p className="text-sm text-muted-foreground">
-          Live jobs up top — everything that finished settles below as Done
+          Canlı görevler yukarıda — tamamlananlar aşağıda listelenir
         </p>
       </div>
 
@@ -1115,7 +1115,7 @@ export function TasksPage() {
         <div className="relative flex-1 min-w-48">
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search tasks…"
+            placeholder="Görevlerde ara…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
@@ -1152,35 +1152,35 @@ export function TasksPage() {
               onChange={(e) => handleSelectAll(e.target.checked)}
               className="accent-primary"
             />
-            Select all
+            Tümünü seç
           </label>
         )}
 
         <Button size="sm" variant="outline" onClick={invalidate}>
           <RefreshCwIcon />
-          Refresh
+          Yenile
         </Button>
       </div>
 
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2">
-          <span className="text-sm font-medium">{selected.size} selected</span>
+          <span className="text-sm font-medium">{selected.size} seçildi</span>
           {hasApproval && (
             <Button size="sm" onClick={() => void handleBulkAction('approve')}>
               <CheckIcon />
-              Approve
+              Onayla
             </Button>
           )}
           {hasApproval && (
             <Button size="sm" variant="destructive" onClick={() => void handleBulkAction('reject')}>
               <XIcon />
-              Reject
+              Reddet
             </Button>
           )}
           {hasCancellable && (
             <Button size="sm" variant="secondary" onClick={() => void handleBulkAction('cancel')}>
               <BanIcon />
-              Cancel jobs
+              İptal Et
             </Button>
           )}
           <Button
@@ -1189,7 +1189,7 @@ export function TasksPage() {
             onClick={() => setShowBulkDelete(true)}
           >
             <Trash2Icon />
-            Delete
+            Sil
           </Button>
         </div>
       )}

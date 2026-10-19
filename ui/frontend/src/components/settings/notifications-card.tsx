@@ -54,14 +54,14 @@ export function NotificationsCard() {
     try {
       if (next) {
         await enablePush()
-        toast.success('Notifications on for this browser')
+        toast.success('Bu tarayıcı için bildirimler açıldı')
       } else {
         await disablePush()
-        toast.success('Notifications off for this browser')
+        toast.success('Bu tarayıcı için bildirimler kapatıldı')
       }
       await refresh()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not change notifications')
+      toast.error(err instanceof Error ? err.message : 'Bildirimler değiştirilemedi')
       // Re-read rather than assuming the toggle failed cleanly: permission may
       // have been granted even though registering the endpoint did not finish.
       await refresh()
@@ -77,17 +77,16 @@ export function NotificationsCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BellIcon className="size-4" />
-          Notifications
+          Bildirimler
         </CardTitle>
         <CardDescription>
-          Get told when a recipe finishes, fails, or is waiting for your approval —
-          even with the app closed. Approvals expire, so this is the one worth having.
+          Bir tarif tamamlandığında, hata verdiğinde veya onayınızı beklediğinde bildirim alın.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4 max-w-md">
           <Label htmlFor="push-toggle" className="font-normal">
-            Notify this browser
+            Bu tarayıcı için bildirimleri etkinleştir
           </Label>
           <Switch
             id="push-toggle"
@@ -99,21 +98,19 @@ export function NotificationsCard() {
 
         {!supported && (
           <p className="text-xs text-muted-foreground">
-            This browser does not support web notifications. On iOS, add the app to your
-            Home Screen first.
+            Bu tarayıcı web bildirimlerini desteklemiyor. iOS'ta önce uygulamayı Ana Ekrana ekleyin.
           </p>
         )}
 
         {supported && blocked && (
           <p className="text-xs text-destructive">
-            Notifications are blocked for this site. Re-allow them in your browser’s site
-            settings, then reload.
+            Bu site için bildirimler engellendi. Tarayıcı ayarlarından izin verip sayfayı yenileyin.
           </p>
         )}
 
         {supported && !blocked && (
           <p className="text-xs text-muted-foreground">
-            Applies to this browser only — turn it on wherever you want to be notified.
+            Yalnızca bu tarayıcı için geçerlidir — bildirim almak istediğiniz her cihazda açabilirsiniz.
           </p>
         )}
       </CardContent>

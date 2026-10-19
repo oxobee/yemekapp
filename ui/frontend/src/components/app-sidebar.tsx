@@ -12,9 +12,9 @@ import { Separator } from '@/components/ui/separator'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 const NAV_ITEMS = [
-  { title: 'Home', to: '/', icon: Home },
-  { title: 'Tasks', to: '/tasks', icon: ListChecks },
-  { title: 'Settings', to: '/settings', icon: Settings },
+  { title: 'Ana Sayfa', to: '/', icon: Home },
+  { title: 'Görevler', to: '/tasks', icon: ListChecks },
+  { title: 'Ayarlar', to: '/settings', icon: Settings },
 ] as const
 
 export function AppSidebar() {
@@ -42,14 +42,14 @@ export function AppSidebar() {
               <ChefHat className="size-4" />
             </div>
             <span className="text-sm font-semibold tracking-tight">
-              Pick a Recipe
+              YemekApp
             </span>
           </div>
         </SidebarHeader>
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel>Menü</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {NAV_ITEMS.map((item) => (
@@ -65,7 +65,7 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                       )}
                     </NavLink>
-                    {item.title === 'Tasks' && approvalsCount > 0 && (
+                    {item.to === '/tasks' && approvalsCount > 0 && (
                       <SidebarMenuBadge className="bg-destructive text-white rounded-full px-1.5">
                         {approvalsCount}
                       </SidebarMenuBadge>
@@ -92,8 +92,8 @@ export function AppSidebar() {
               )}
             </Button>
             <Separator orientation="vertical" className="h-5" />
-            <a href="/logout" aria-label="Log out">
-              <Button variant="ghost" size="icon" title="Logout">
+            <a href="/logout" aria-label="Çıkış yap">
+              <Button variant="ghost" size="icon" title="Çıkış Yap">
                 <LogOut className="size-4" />
               </Button>
             </a>
@@ -103,7 +103,7 @@ export function AppSidebar() {
               <span className="truncate">{session.user}</span>
               {session.is_admin && (
                 <span className="shrink-0 rounded-sm bg-primary/10 px-1 py-0.5 font-medium text-primary">
-                  admin
+                  yönetici
                 </span>
               )}
             </div>

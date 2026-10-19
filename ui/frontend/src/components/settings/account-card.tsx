@@ -38,9 +38,9 @@ export function AccountCard({ username }: { username: string }) {
       setCurrent('')
       setNext('')
       setConfirm('')
-      toast.success('Password changed')
+      toast.success('Şifre değiştirildi')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not change password')
+      toast.error(err instanceof Error ? err.message : 'Şifre değiştirilemedi')
     } finally {
       setSaving(false)
     }
@@ -51,17 +51,16 @@ export function AccountCard({ username }: { username: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <KeyRoundIcon className="size-4" />
-          Your account
+          Hesabınız
         </CardTitle>
         <CardDescription>
-          Signed in as <span className="font-medium text-foreground">{username}</span>.
-          Change your password below.
+          <span className="font-medium text-foreground">{username}</span> olarak giriş yapıldı. Şifrenizi aşağıdan değiştirebilirsiniz.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="current-password">Current password</Label>
+            <Label htmlFor="current-password">Mevcut şifre</Label>
             <Input
               id="current-password"
               type="password"
@@ -71,7 +70,7 @@ export function AccountCard({ username }: { username: string }) {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-password">New password</Label>
+            <Label htmlFor="new-password">Yeni şifre</Label>
             <Input
               id="new-password"
               type="password"
@@ -81,11 +80,11 @@ export function AccountCard({ username }: { username: string }) {
               minLength={MIN_PASSWORD_LENGTH}
             />
             <p className="text-xs text-muted-foreground">
-              At least {MIN_PASSWORD_LENGTH} characters.
+              En az {MIN_PASSWORD_LENGTH} karakter olmalıdır.
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="confirm-password">Confirm new password</Label>
+            <Label htmlFor="confirm-password">Yeni şifreyi onayla</Label>
             <Input
               id="confirm-password"
               type="password"
@@ -97,12 +96,12 @@ export function AccountCard({ username }: { username: string }) {
             />
             {mismatch && (
               <p className="text-xs text-destructive">
-                The two passwords do not match.
+                Şifreler birbiriyle eşleşmiyor.
               </p>
             )}
           </div>
           <Button type="submit" disabled={!canSubmit} className="self-start">
-            {saving ? 'Changing…' : 'Change password'}
+            {saving ? 'Değiştiriliyor…' : 'Şifreyi Değiştir'}
           </Button>
         </form>
       </CardContent>

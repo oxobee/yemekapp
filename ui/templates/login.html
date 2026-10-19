@@ -1,50 +1,47 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Pick-a-Recipe{% endblock %}
+{% block title %}Giriş Yap - YemekApp{% endblock %}
 
 {% block content %}
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <img src="{{ url_for('static', filename='icons/icon-192x192.png') }}" alt="Pick-a-Recipe" class="logo-image">
-            <h1>Pick-a-Recipe</h1>
-            <p>Extract recipes from social media videos</p>
+            <img src="{{ url_for('static', filename='icons/icon-192x192.png') }}" alt="YemekApp" class="logo-image">
+            <h1>YemekApp</h1>
+            <p>Sosyal medya videolarından yemek tarifleri çıkarın</p>
         </div>
 
         {% if local_auth %}
         <form method="post" action="{{ url_for('auth_local_login') }}" class="login-form">
             <div class="form-group">
-                <label for="username">Username</label>
+                <label for="username">Kullanıcı Adı</label>
                 <input type="text" id="username" name="username" autocomplete="username"
                        autocapitalize="none" spellcheck="false" required autofocus>
             </div>
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">Şifre</label>
                 <input type="password" id="password" name="password"
                        autocomplete="current-password" required>
             </div>
             <button type="submit" class="btn btn-primary btn-block">
-                <i class="fas fa-right-to-bracket"></i> Sign in
+                <i class="fas fa-right-to-bracket"></i> Giriş Yap
             </button>
         </form>
         {% elif sso_enabled %}
         <a href="{{ url_for('auth_login') }}" class="btn btn-primary btn-block" style="display:flex; align-items:center; justify-content:center; gap:0.5rem;">
-            <i class="fas fa-fingerprint"></i> Sign in with {{ oidc_provider_name }}
+            <i class="fas fa-fingerprint"></i> {{ oidc_provider_name }} ile Giriş Yap
         </a>
         {% else %}
         <p class="form-hint" style="text-align:center;">
             <i class="fas fa-triangle-exclamation"></i>
-            Single sign-on is not configured on this server. Set
-            <code>OIDC_ISSUER_URL</code>, <code>OIDC_CLIENT_ID</code> and
-            <code>OIDC_CLIENT_SECRET</code>, or drop <code>AUTH_MODE</code> to
-            use local accounts instead.
+            Sunucuda tek oturum açma (SSO) yapılandırılmamış. Yerel hesap kullanmak için <code>AUTH_MODE=local</code> ayarlayın.
         </p>
         {% endif %}
 
         <div class="login-footer">
             <button id="install-btn" class="btn btn-secondary btn-block" style="display: none; margin-top: 1rem;">
                 <i class="fas fa-download"></i>
-                Install App
+                Uygulamayı Yükle
             </button>
         </div>
     </div>

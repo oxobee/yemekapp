@@ -54,7 +54,7 @@ export function SetupPage() {
         window.location.href = '/login'
         return
       }
-      setError(err instanceof Error ? err.message : 'Could not create the account.')
+      setError(err instanceof Error ? err.message : 'Hesap oluşturulamadı.')
       setSubmitting(false)
     }
   }
@@ -68,10 +68,10 @@ export function SetupPage() {
           </div>
           <div className="text-center">
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              Welcome
+              Hoş Geldiniz
             </h1>
             <p className="text-sm text-muted-foreground">
-              Create the administrator account for this instance
+              YemekApp için yönetici hesabını oluşturun
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export function SetupPage() {
                     htmlFor="username"
                     className="text-sm font-medium text-foreground"
                   >
-                    Username
+                    Kullanıcı Adı
                   </label>
                   <Input
                     id="username"
@@ -116,12 +116,11 @@ export function SetupPage() {
                   />
                   {data?.adopting && (
                     <p className="text-xs text-muted-foreground">
-                      This instance already has recipes saved under{' '}
+                      Bu uygulamada zaten{' '}
                       <span className="font-medium text-foreground">
                         {data.adopting}
-                      </span>
-                      . Keep that name to carry them over; a different one starts
-                      with an empty history.
+                      </span>{' '}
+                      adıyla kayıtlı tarifler var. Onları korumak için aynı ismi kullanabilirsiniz.
                     </p>
                   )}
                 </div>
@@ -131,7 +130,7 @@ export function SetupPage() {
                     htmlFor="password"
                     className="text-sm font-medium text-foreground"
                   >
-                    Password
+                    Şifre
                   </label>
                   <Input
                     id="password"
@@ -144,8 +143,7 @@ export function SetupPage() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    At least 10 characters. Length matters more than symbols, so a
-                    memorable phrase works well.
+                    En az 10 karakter. Sembollerden ziyade uzunluk ve akılda kalıcılık önemlidir.
                   </p>
                 </div>
 
@@ -154,7 +152,7 @@ export function SetupPage() {
                     htmlFor="confirm_password"
                     className="text-sm font-medium text-foreground"
                   >
-                    Confirm password
+                    Şifreyi Onayla
                   </label>
                   <Input
                     id="confirm_password"
@@ -175,7 +173,7 @@ export function SetupPage() {
                   disabled={submitting}
                 >
                   <ShieldCheck />
-                  {submitting ? 'Creating account…' : 'Create account'}
+                  {submitting ? 'Hesap oluşturuluyor…' : 'Hesap Oluştur'}
                 </Button>
               </form>
             )}
@@ -183,8 +181,7 @@ export function SetupPage() {
         </Card>
 
         <p className="max-w-sm text-center text-xs text-muted-foreground">
-          This page closes as soon as an account exists. If you did not open it
-          yourself, create the account now to stop someone else claiming it.
+          Bir yönetici hesabı oluşturulduğunda bu kurulum sayfası otomatik olarak kapanır.
         </p>
       </div>
     </div>

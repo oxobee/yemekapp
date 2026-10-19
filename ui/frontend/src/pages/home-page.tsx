@@ -199,11 +199,11 @@ export function HomePage() {
   const handleSubmit = useCallback(() => {
     const url = urlInput.trim()
     if (!url) {
-      toast.error('Please enter a video URL')
+      toast.error('Lütfen bir video veya tarif linki girin')
       return
     }
     if (!isValidUrl(url)) {
-      toast.error('Please enter a valid URL')
+      toast.error('Lütfen geçerli bir URL girin')
       return
     }
     createJobMutation.mutate(url)
@@ -212,7 +212,7 @@ export function HomePage() {
   const handleBatchSubmit = useCallback(() => {
     const raw = batchInput.trim()
     if (!raw) {
-      toast.error('Enter at least one URL')
+      toast.error('En az bir URL girin')
       return
     }
     const urls = raw
@@ -220,7 +220,7 @@ export function HomePage() {
       .map((u) => u.trim())
       .filter(Boolean)
     if (urls.length > 50) {
-      toast.error('Maximum 50 URLs per batch')
+      toast.error('Bir seferde en fazla 50 URL eklenebilir')
       return
     }
     batchJobsMutation.mutate(urls)
@@ -241,9 +241,9 @@ export function HomePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
       <div className="space-y-1 text-center">
-        <h1 className="text-2xl font-bold">Pick-a-Recipe</h1>
+        <h1 className="text-2xl font-bold">YemekApp</h1>
         <p className="text-sm text-muted-foreground">
-          Extract recipes from TikTok, YouTube, Instagram and more
+          TikTok, YouTube, Instagram ve yemek sitelerinden tarifleri çıkarın
         </p>
       </div>
 
@@ -251,7 +251,7 @@ export function HomePage() {
         <div className="flex gap-2">
           <Input
             type="url"
-            placeholder="Paste URL here (TikTok, YouTube, Instagram, or any recipe website…)"
+            placeholder="URL yapıştırın (TikTok, YouTube, Instagram veya yemek sitesi…)"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={(e) => {
@@ -267,7 +267,7 @@ export function HomePage() {
             disabled={createJobMutation.isPending}
           >
             <SparklesIcon />
-            Extract Recipe
+            {createJobMutation.isPending ? 'Başlatılıyor…' : 'Tarifi Çıkar'}
           </Button>
         </div>
 
@@ -280,13 +280,13 @@ export function HomePage() {
             <ChevronDownIcon
               className={`size-3.5 transition-transform ${batchOpen ? 'rotate-180' : ''}`}
             />
-            Batch import (multiple URLs)
+            Toplu içe aktarma (Çoklu URL)
           </button>
           {batchOpen && (
             <div className="space-y-2 border-t px-3 pb-3 pt-2">
               <Textarea
                 rows={4}
-                placeholder="One URL per line (max 50)…"
+                placeholder="Her satıra bir URL (maksimum 50)…"
                 value={batchInput}
                 onChange={(e) => setBatchInput(e.target.value)}
                 className="w-full resize-none text-sm"
@@ -298,7 +298,7 @@ export function HomePage() {
                 disabled={batchJobsMutation.isPending}
               >
                 <LayersIcon />
-                Queue All
+                Hepsini Kuyruğa Ekle
               </Button>
             </div>
           )}
@@ -334,7 +334,7 @@ export function HomePage() {
       {(activeJobs.length > 0 || jobsLoading) && (
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
-            Active Jobs
+            Aktif Görevler
             {!jobsLoading && (
               <span className="text-xs font-normal text-muted-foreground">
                 ({activeJobs.length})
@@ -363,7 +363,7 @@ export function HomePage() {
 
       {(recentCompleted.length > 0 || historyLoading) && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold">Recently Completed</h2>
+          <h2 className="text-sm font-semibold">Son Tamamlananlar</h2>
           {historyLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-12 w-full rounded-lg" />
@@ -378,13 +378,13 @@ export function HomePage() {
                 >
                   <CheckCircle2Icon className="size-4 shrink-0 text-emerald-500" />
                   <span className="flex-1 truncate font-medium">
-                    {entry.recipe_name ?? entry.video_title ?? 'Untitled Recipe'}
+                    {entry.recipe_name ?? entry.video_title ?? 'İsimsiz Tarif'}
                   </span>
                   <Link
                     to="/tasks"
                     className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    View
+                    Görüntüle
                   </Link>
                 </div>
               ))}
@@ -393,7 +393,7 @@ export function HomePage() {
           <Link to="/tasks">
             <Button variant="secondary" size="sm">
               <ListChecksIcon />
-              View All Tasks
+              Tüm Görevleri Gör
             </Button>
           </Link>
         </section>

@@ -60,12 +60,12 @@ function AddUserDialog({
     mutationFn: () => api.createUser(username.trim(), password, isAdmin),
     onSuccess: async ({ user }) => {
       await queryClient.invalidateQueries({ queryKey: ['users'] })
-      toast.success(`Created ${user.username}`)
+      toast.success(`${user.username} oluşturuldu`)
       reset()
       onOpenChange(false)
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Could not create the account')
+      toast.error(err instanceof Error ? err.message : 'Hesap oluşturulamadı')
     },
   })
 
@@ -84,10 +84,9 @@ function AddUserDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add an account</DialogTitle>
+          <DialogTitle>Hesap Ekle</DialogTitle>
           <DialogDescription>
-            You choose the password and pass it on yourself — there is no
-            self-registration and no invitation email.
+            Şifreyi siz belirlersiniz — harici kayıt veya davet e-postası yoktur.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -98,7 +97,7 @@ function AddUserDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-username">Username</Label>
+            <Label htmlFor="new-username">Kullanıcı Adı</Label>
             <Input
               id="new-username"
               value={username}
@@ -109,7 +108,7 @@ function AddUserDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-user-password">Password</Label>
+            <Label htmlFor="new-user-password">Şifre</Label>
             <Input
               id="new-user-password"
               type="password"
@@ -119,16 +118,14 @@ function AddUserDialog({
               minLength={MIN_PASSWORD_LENGTH}
             />
             <p className="text-xs text-muted-foreground">
-              At least {MIN_PASSWORD_LENGTH} characters. They can change it once
-              signed in.
+              En az {MIN_PASSWORD_LENGTH} karakter olmalıdır.
             </p>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
             <div>
-              <Label htmlFor="new-user-admin">Administrator</Label>
+              <Label htmlFor="new-user-admin">Yönetici (Admin)</Label>
               <p className="text-xs text-muted-foreground">
-                Can change settings, see everyone's extractions, and manage
-                accounts.
+                Ayarları değiştirebilir, tüm görevleri görebilir ve hesapları yönetebilir.
               </p>
             </div>
             <Switch
@@ -143,10 +140,10 @@ function AddUserDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              İptal
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {create.isPending ? 'Creating…' : 'Create account'}
+              {create.isPending ? 'Oluşturuluyor…' : 'Hesap Oluştur'}
             </Button>
           </DialogFooter>
         </form>
@@ -188,10 +185,9 @@ function ResetPasswordDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Set a new password</DialogTitle>
+          <DialogTitle>Yeni şifre belirle</DialogTitle>
           <DialogDescription>
-            For {user?.username}. Their existing sessions stay signed in; the new
-            password applies the next time they sign in.
+            {user?.username} için yeni bir şifre belirleyin. Mevcut oturumları açık kalır; yeni şifre bir sonraki girişte geçerli olur.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -202,7 +198,7 @@ function ResetPasswordDialog({
           }}
         >
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="reset-password">New password</Label>
+            <Label htmlFor="reset-password">Yeni şifre</Label>
             <Input
               id="reset-password"
               type="password"
@@ -214,13 +210,13 @@ function ResetPasswordDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              İptal
             </Button>
             <Button
               type="submit"
               disabled={password.length < MIN_PASSWORD_LENGTH || reset.isPending}
             >
-              {reset.isPending ? 'Setting…' : 'Set password'}
+              {reset.isPending ? 'Kaydediliyor…' : 'Şifreyi Kaydet'}
             </Button>
           </DialogFooter>
         </form>
@@ -250,7 +246,7 @@ function UserRow({
       await queryClient.invalidateQueries({ queryKey: ['users'] })
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Could not change rights')
+      toast.error(err instanceof Error ? err.message : 'Yetkiler değiştirilemedi')
     },
   })
 
@@ -263,10 +259,10 @@ function UserRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate font-medium">{user.username}</span>
-          {isSelf && <Badge variant="secondary">you</Badge>}
+          {isSelf && <Badge variant="secondary">siz</Badge>}
           {user.is_oidc && <Badge variant="outline">SSO</Badge>}
           {!user.has_password && !user.is_oidc && (
-            <Badge variant="outline">no password</Badge>
+            <Badge variant="outline">şifresiz</Badge>
           )}
         </div>
         {user.email && (
@@ -279,7 +275,7 @@ function UserRow({
           htmlFor={`admin-${user.username}`}
           className="text-xs text-muted-foreground"
         >
-          Admin
+          Yönetici
         </Label>
         <Switch
           id={`admin-${user.username}`}
@@ -293,7 +289,7 @@ function UserRow({
         variant="ghost"
         size="icon"
         onClick={onResetPassword}
-        title="Set a new password"
+        title="Yeni şifre belirle"
       >
         <KeyRoundIcon />
       </Button>
@@ -302,7 +298,7 @@ function UserRow({
         size="icon"
         onClick={onDelete}
         disabled={isSelf || (user.is_admin && lastAdmin)}
-        title={isSelf ? 'You cannot delete your own account' : 'Delete account'}
+        title={isSelf ? 'Kendi hesabınızı silemezsiniz' : 'Hesabı sil'}
       >
         <Trash2Icon />
       </Button>
@@ -330,11 +326,11 @@ export function UsersCard({ currentUsername }: { currentUsername: string }) {
     onSuccess: async ({ username }) => {
       await queryClient.invalidateQueries({ queryKey: ['users'] })
       await queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      toast.success(`Deleted ${username}`)
+      toast.success(`${username} silindi`)
       setDeleting(null)
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Could not delete the account')
+      toast.error(err instanceof Error ? err.message : 'Hesap silinemedi')
     },
   })
 
@@ -345,11 +341,10 @@ export function UsersCard({ currentUsername }: { currentUsername: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UsersIcon className="size-4" />
-          Accounts
+          Kullanıcı Hesapları
         </CardTitle>
         <CardDescription>
-          Everyone who can sign in to this instance. Only administrators can add
-          or remove accounts.
+          Sisteme giriş yapabilen kullanıcılar. Yalnızca yöneticiler hesap ekleyebilir veya silebilir.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -376,7 +371,7 @@ export function UsersCard({ currentUsername }: { currentUsername: string }) {
           onClick={() => setAdding(true)}
         >
           <UserPlusIcon />
-          Add account
+          Hesap Ekle
         </Button>
       </CardContent>
 
@@ -391,19 +386,17 @@ export function UsersCard({ currentUsername }: { currentUsername: string }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {deleting?.username}?</AlertDialogTitle>
+            <AlertDialogTitle>{deleting?.username} silinsin mi?</AlertDialogTitle>
             <AlertDialogDescription>
-              Their queued extractions and pending uploads are deleted with the
-              account. Recipes already saved to your history belong to the
-              instance and are kept.
+              Kullanıcının sıradaki görevleri hesapla birlikte silinir. Geçmişte kaydedilen tarifler korunur.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleting && remove.mutate(deleting.username)}
             >
-              Delete account
+              Hesabı Sil
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

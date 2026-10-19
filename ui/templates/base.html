@@ -30,13 +30,13 @@
     {% if session.user %}
     <nav class="sidebar">
         <div class="sidebar-top">
-            <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" title="Home">
+            <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" title="Ana Sayfa">
                 <i class="fas fa-home"></i>
             </a>
-            <a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" title="Settings">
+            <a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}" title="Ayarlar">
                 <i class="fas fa-cog"></i>
             </a>
-            <a href="{{ url_for('tasks_page') }}" class="nav-link {% if request.endpoint == 'tasks_page' %}active{% endif %}" title="Tasks">
+            <a href="{{ url_for('tasks_page') }}" class="nav-link {% if request.endpoint == 'tasks_page' %}active{% endif %}" title="Görevler">
                 <i class="fas fa-list-check"></i>
                 {% if approvals_count %}
                 <span class="nav-badge" id="approvals-badge">{{ approvals_count }}</span>
@@ -44,7 +44,7 @@
             </a>
         </div>
         <div class="sidebar-bottom">
-            <a href="{{ url_for('logout') }}" class="nav-link" title="Logout">
+            <a href="{{ url_for('logout') }}" class="nav-link" title="Çıkış Yap">
                 <i class="fas fa-sign-out-alt"></i>
             </a>
         </div>

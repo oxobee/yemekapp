@@ -65,7 +65,7 @@ function PasswordForm() {
       // new, and every cached query was populated while signed out.
       window.location.href = '/'
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign-in failed.')
+      setError(err instanceof Error ? err.message : 'Giriş yapılamadı.')
       setSubmitting(false)
     }
   }
@@ -83,7 +83,7 @@ function PasswordForm() {
       )}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="username" className="text-sm font-medium text-foreground">
-          Username
+          Kullanıcı Adı
         </label>
         <Input
           id="username"
@@ -99,7 +99,7 @@ function PasswordForm() {
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="text-sm font-medium text-foreground">
-          Password
+          Şifre
         </label>
         <Input
           id="password"
@@ -112,7 +112,7 @@ function PasswordForm() {
         />
       </div>
       <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-        {submitting ? 'Signing in…' : 'Sign in'}
+        {submitting ? 'Giriş yapılıyor…' : 'Giriş Yap'}
       </Button>
     </form>
   )
@@ -145,10 +145,10 @@ export function LoginPage() {
           </div>
           <div className="text-center">
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              Pick a Recipe
+              YemekApp
             </h1>
             <p className="text-sm text-muted-foreground">
-              Extract recipes from social media videos
+              Sosyal medya videolarından tarif çıkarın
             </p>
           </div>
         </div>
@@ -161,7 +161,7 @@ export function LoginPage() {
               <PasswordForm />
             ) : ssoEnabled ? (
               <Button asChild size="lg" className="w-full">
-                <a href="/auth/login">Sign in with {ssoProviderName}</a>
+                <a href="/auth/login">{ssoProviderName} ile Giriş Yap</a>
               </Button>
             ) : (
               <div
@@ -170,23 +170,7 @@ export function LoginPage() {
               >
                 <TriangleAlert className="mt-0.5 size-4 shrink-0" />
                 <span>
-                  Single sign-on is not configured on this server. Set{' '}
-                  <code className="rounded bg-destructive/15 px-1 font-mono text-xs">
-                    OIDC_ISSUER_URL
-                  </code>
-                  ,{' '}
-                  <code className="rounded bg-destructive/15 px-1 font-mono text-xs">
-                    OIDC_CLIENT_ID
-                  </code>{' '}
-                  and{' '}
-                  <code className="rounded bg-destructive/15 px-1 font-mono text-xs">
-                    OIDC_CLIENT_SECRET
-                  </code>
-                  , or drop{' '}
-                  <code className="rounded bg-destructive/15 px-1 font-mono text-xs">
-                    AUTH_MODE
-                  </code>{' '}
-                  to use local accounts instead.
+                  Sunucuda tek oturum açma (SSO) yapılandırılmamış. Yerel hesap kullanmak için AUTH_MODE=local ayarlayın.
                 </span>
               </div>
             )}
@@ -199,7 +183,7 @@ export function LoginPage() {
                 onClick={() => void install()}
               >
                 <Download />
-                Install App
+                Uygulamayı Yükle
               </Button>
             )}
           </CardContent>

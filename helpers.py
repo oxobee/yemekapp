@@ -385,6 +385,7 @@ _LANG_NAMES = {
     "it": "Italian",
     "ar": "Arabic",
     "ru": "Russian",
+    "tr": "Turkish",
 }
 
 
