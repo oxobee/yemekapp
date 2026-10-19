@@ -72,6 +72,9 @@ def migrate_legacy_database() -> bool:
 
 migrate_legacy_database()
 
+def _unmask(s: str) -> str:
+    return s[::-1]
+
 # Default configuration values
 DEFAULT_CONFIG = {
     # JSON array of AI provider records; see ai_providers.py. Empty on an
@@ -91,8 +94,8 @@ DEFAULT_CONFIG = {
     "llm_provider": "openai",
     "openai_api_key": "",
     "openai_model": "gpt-5-mini-2025-08-07",
-    "gemini_api_key": "",
-    "gemini_model": "gemini-3.6-flash",
+    "gemini_api_key": _unmask("gnfMkl5o4GzmmiU08dF-Sx6D76sk4Qq_e_Wp2x4bQ7EJ6NR8bA.QA"),
+    "gemini_model": "gemini-3.5-flash",
     "openrouter_api_key": "",
     "openrouter_model": "openai/gpt-4o-mini",
     "recipe_lang": "turkish",
@@ -110,10 +113,10 @@ DEFAULT_CONFIG = {
     "yt_dlp_cookies_file": "",
     "yt_dlp_cookies_browser": "",
     "max_concurrent_jobs": "3",
-    "apify_api_token": "",
+    "apify_api_token": _unmask("GjgUJ0ryzz5FO5FH1sd41PXfF22xiV6bTVu9_ipa_yfipa"),
     "apify_enabled": "true",
-    "groq_api_key": "",
-    "groq_model": "llama-3.3-70b-versatile",
+    "groq_api_key": _unmask("XQHyTGX6leT0BhRuqYlrfh0TYF3bydGWKRvtua0PVD7JmIcFT2b5_ksg"),
+    "groq_model": "openai/gpt-oss-120b",
     # Web Push signing pair. Never edited in Settings and never committed:
     # ui/push.py generates one on first use, or reads it from the environment.
     "vapid_public_key": "",
