@@ -1,6 +1,6 @@
 import { useEffect, useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { PlusIcon, ServerIcon, Trash2Icon } from 'lucide-react'
+import { PlusIcon, ServerIcon, Trash2Icon, SparklesIcon, ZapIcon } from 'lucide-react'
 
 import { api } from '@/lib/api'
 import type { AiProvider, ApiTypeSpec } from '@/types'
@@ -15,6 +15,53 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
+export const DEFAULT_API_TYPES: Record<string, ApiTypeSpec> = {
+  gemini: {
+    label: 'Google Gemini (En Uygun / Ücretsiz Kota)',
+    needs_base_url: false,
+    default_base_url: '',
+    catalog: 'google',
+    example_model: 'gemini-1.5-flash',
+    key_placeholder: 'AIzaSy...',
+    key_hint: 'Google AI Studio (aistudio.google.com) üzerinden ücretsiz alabilirsiniz.',
+    key_url: 'https://aistudio.google.com/app/apikey',
+    key_link_label: 'Google AI Studio Anahtarı Al',
+  },
+  'openai-compatible': {
+    label: 'OpenAI Uyumlu / Groq / OpenRouter',
+    needs_base_url: true,
+    default_base_url: 'https://api.groq.com/openai/v1',
+    catalog: '',
+    example_model: 'llama-3.3-70b-versatile',
+    key_placeholder: 'gsk_...',
+    key_hint: 'Groq Cloud (console.groq.com) üzerinden ücretsiz alabilirsiniz.',
+    key_url: 'https://console.groq.com/keys',
+    key_link_label: 'Groq API Anahtarı Al',
+  },
+  openai: {
+    label: 'OpenAI (GPT-4o / GPT-4o-mini)',
+    needs_base_url: false,
+    default_base_url: '',
+    catalog: 'openai',
+    example_model: 'gpt-4o-mini',
+    key_placeholder: 'sk-...',
+    key_hint: 'OpenAI platformu üzerinden alınan API anahtarı.',
+    key_url: 'https://platform.openai.com/api-keys',
+    key_link_label: 'OpenAI API Anahtarı',
+  },
+  anthropic: {
+    label: 'Anthropic Claude',
+    needs_base_url: false,
+    default_base_url: '',
+    catalog: 'anthropic',
+    example_model: 'claude-3-5-haiku-latest',
+    key_placeholder: 'sk-ant-...',
+    key_hint: 'Anthropic Console üzerinden alınan API anahtarı.',
+    key_url: 'https://console.anthropic.com/settings/keys',
+    key_link_label: 'Anthropic API Anahtarı',
+  },
+}
 
 function slugify(name: string): string {
   return (
@@ -103,7 +150,10 @@ export function AiProvidersCard({
     if (providers === null && data) onChange(data.providers)
   }, [providers, data, onChange])
 
-  const apiTypes: Record<string, ApiTypeSpec> = data?.api_types ?? {}
+  const apiTypes: Record<string, ApiTypeSpec> =
+    data?.api_types && Object.keys(data.api_types).length > 0
+      ? data.api_types
+      : DEFAULT_API_TYPES
   const catalogs: Record<string, string> = data?.compatible_catalogs ?? {}
   const rows = providers ?? data?.providers ?? []
 
@@ -260,10 +310,52 @@ export function AiProvidersCard({
           )
         })}
 
-        <div>
+        <div className="flex flex-wrap items-center gap-2 pt-2">
           <Button type="button" variant="secondary" onClick={add}>
             <PlusIcon />
-            Sağlayıcı Ekle
+            Özel Sağlayıcı Ekle
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const id = `gemini-${Date.now().toString(36)}`
+              onChange([
+                ...rows,
+                {
+                  id,
+                  name: 'Google Gemini 1.5 Flash',
+                  api_type: 'gemini',
+                  api_key: '',
+                  base_url: '',
+                  model: 'gemini-1.5-flash',
+                },
+              ])
+            }}
+          >
+            <SparklesIcon className="size-4 text-blue-500 mr-1.5" />
+            + Google Gemini (Ücretsiz)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const id = `groq-${Date.now().toString(36)}`
+              onChange([
+                ...rows,
+                {
+                  id,
+                  name: 'Groq Cloud (Llama 3.3)',
+                  api_type: 'openai-compatible',
+                  api_key: '',
+                  base_url: 'https://api.groq.com/openai/v1',
+                  model: 'llama-3.3-70b-versatile',
+                },
+              ])
+            }}
+          >
+            <ZapIcon className="size-4 text-orange-500 mr-1.5" />
+            + Groq Cloud (Hızlı & Ücretsiz)
           </Button>
         </div>
       </CardContent>

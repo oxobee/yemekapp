@@ -58,6 +58,8 @@ _SECRET_CONFIG_KEYS = (
     'tandoor_api_key',
     'hf_token',
     'vapid_private_key',
+    'apify_api_token',
+    'groq_api_key',
 )
 
 _level_override: str | None = None

@@ -24,6 +24,7 @@ from uploaders import (
 from url_safety import UnsafeURLError, assert_public_http_url
 from video_downloader import VideoDownloader
 from web_recipe_fetcher import is_video_url, fetch_web_recipe, download_image
+from apify_extractor import is_apify_available, extract_with_apify
 
 
 class ProgressReporter(Protocol):
@@ -92,12 +93,23 @@ def run_extraction_pipeline(
         if reporter.is_cancelled():
             return PipelineResult(error="cancelled")
 
-        reporter.update("info", "Fetching video information...", 10)
-        downloader = VideoDownloader(url)
-        item = downloader._get_info()
-        description = item.get("description", "No description available.")
-        title = item.get("title", "Untitled")
-        reporter.update("info", f"Video: {title}", 15, video_title=title)
+        apify_data = None
+        if is_apify_available():
+            reporter.update("info", "Apify ile video bilgileri alınıyor...", 10)
+            apify_data = extract_with_apify(url)
+
+        if apify_data:
+            title = apify_data.get("title") or "Yemek Tarifi"
+            description = apify_data.get("description") or ""
+            reporter.update("info", f"Video: {title} (Apify)", 15, video_title=title)
+            downloader = VideoDownloader(apify_data.get("video_url") or url)
+        else:
+            reporter.update("info", "Fetching video information...", 10)
+            downloader = VideoDownloader(url)
+            item = downloader._get_info()
+            description = item.get("description", "No description available.")
+            title = item.get("title", "Untitled")
+            reporter.update("info", f"Video: {title}", 15, video_title=title)
 
         if reporter.is_cancelled():
             return PipelineResult(error="cancelled")
@@ -118,7 +130,10 @@ def run_extraction_pipeline(
         # Off means ignore audio entirely, including a transcription left over
         # from an earlier run. Writing an empty cache here would also stick:
         # turning speech to text back on would keep reusing that empty file.
-        if config.TRANSCRIPTION_MODE == "off":
+        if apify_data and apify_data.get("transcript"):
+            reporter.update("transcribe", "Apify altyazısı kullanılıyor", 50)
+            transcription = apify_data["transcript"]
+        elif config.TRANSCRIPTION_MODE == "off":
             reporter.update("transcribe", "Speech to text is off", 50)
             transcription = ""
         else:

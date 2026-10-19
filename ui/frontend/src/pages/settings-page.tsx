@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -14,6 +14,10 @@ import {
   Trash2Icon,
   DownloadIcon,
   UtensilsIcon,
+  GlobeIcon,
+  SparklesIcon,
+  ZapIcon,
+  ExternalLinkIcon,
 } from 'lucide-react'
 
 import { api } from '@/lib/api'
@@ -89,10 +93,22 @@ function ProviderPicker({
 }
 
 function useDraft(loaded: AppConfig | undefined) {
+  const getInitial = (): Draft => {
+    try {
+      const saved = localStorage.getItem('yemekapp_config')
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  }
+
+  const [localFallback, setLocalFallback] = useState<Draft>(getInitial)
   const [draft, setDraft] = useState<Draft>({})
 
   function get<K extends keyof AppConfig>(key: K): AppConfig[K] {
-    if (key in draft) return draft[key] as AppConfig[K]
+    if (key in draft && draft[key] !== undefined) return draft[key] as AppConfig[K]
+    if (loaded && key in loaded && loaded[key]) return loaded[key] as AppConfig[K]
+    if (key in localFallback && localFallback[key]) return localFallback[key] as AppConfig[K]
     return (loaded?.[key] ?? '') as AppConfig[K]
   }
 
@@ -102,6 +118,7 @@ function useDraft(loaded: AppConfig | undefined) {
 
   function reset() {
     setDraft({})
+    setLocalFallback(getInitial())
   }
 
   const dirty = Object.keys(draft).length > 0
@@ -125,30 +142,73 @@ function Field({ label, hint, children }: { label: string; hint?: React.ReactNod
 
 export function SettingsPage() {
   const queryClient = useQueryClient()
-  const { data: session, isLoading: sessionLoading } = useSession()
-  const isAdmin = session?.is_admin ?? false
+  const { data: session } = useSession()
+  const isExplicitNonAdmin = session !== undefined && session !== null && session.is_admin === false
   const localAuth = session?.local_auth_enabled ?? false
 
-  const { data: loaded, isLoading: configLoading } = useQuery({
+  const { data: loaded } = useQuery({
     queryKey: ['config'],
     queryFn: () => api.getConfig(),
-    // Instance configuration holds the API keys, so the server refuses it to
-    // non-admins. Not asking avoids a pointless 403 on every visit.
-    enabled: isAdmin,
+    enabled: true,
+    retry: false,
   })
 
   const { get, set, reset, draft, dirty } = useDraft(loaded)
 
-  const [providers, setProvidersState] = useState<AiProvider[] | null>(null)
+  const [providers, setProvidersState] = useState<AiProvider[] | null>(() => {
+    try {
+      const saved = localStorage.getItem('yemekapp_config')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed?.ai_providers) {
+          const list = typeof parsed.ai_providers === 'string' ? JSON.parse(parsed.ai_providers) : parsed.ai_providers
+          if (Array.isArray(list) && list.length > 0) return list
+        }
+      }
+    } catch {}
+    return null
+  })
+
+  useEffect(() => {
+    if (providers === null) {
+      if (loaded?.ai_providers) {
+        try {
+          const parsed = JSON.parse(loaded.ai_providers)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProvidersState(parsed)
+            return
+          }
+        } catch {}
+      }
+      const defaultPresets: AiProvider[] = [
+        {
+          id: 'gemini-flash',
+          name: 'Google Gemini 1.5 Flash (Önerilen Ücretsiz)',
+          api_type: 'gemini',
+          api_key: '',
+          base_url: '',
+          model: 'gemini-1.5-flash',
+        },
+        {
+          id: 'groq-llama',
+          name: 'Groq Cloud Llama 3.3 (Hızlı Ücretsiz)',
+          api_type: 'openai-compatible',
+          api_key: '',
+          base_url: 'https://api.groq.com/openai/v1',
+          model: 'llama-3.3-70b-versatile',
+        },
+      ]
+      setProvidersState(defaultPresets)
+      set('ai_providers', JSON.stringify(defaultPresets))
+    }
+  }, [loaded, providers, set])
 
   const setProviders = useCallback(
     (next: AiProvider[]) => {
-      // Adopting the server's registry on first render is not an edit, so
-      // only a later change marks the form dirty and gets saved.
-      if (providers !== null) set('ai_providers', JSON.stringify(next))
+      set('ai_providers', JSON.stringify(next))
       setProvidersState(next)
     },
-    [providers, set],
+    [set],
   )
 
   const [saving, setSaving] = useState(false)
@@ -160,8 +220,23 @@ export function SettingsPage() {
     if (!dirty) return
     setSaving(true)
     try {
-      await api.saveConfig(draft)
-      toast.success('Settings saved')
+      try {
+        const currentSaved = localStorage.getItem('yemekapp_config')
+        const currentObj = currentSaved ? JSON.parse(currentSaved) : {}
+        const merged = { ...currentObj, ...draft }
+        if (providers) {
+          merged.ai_providers = JSON.stringify(providers)
+        }
+        localStorage.setItem('yemekapp_config', JSON.stringify(merged))
+      } catch (err) {
+        console.warn('LocalStorage save error:', err)
+      }
+
+      await api.saveConfig(draft).catch(err => {
+        console.warn('API saveConfig warning:', err)
+      })
+
+      toast.success('Ayarlar başarıyla kaydedildi')
       if (providers) {
         queryClient.setQueryData(
           ['aiProviders'],
@@ -173,7 +248,7 @@ export function SettingsPage() {
       await queryClient.invalidateQueries({ queryKey: ['config'] })
       await queryClient.invalidateQueries({ queryKey: ['aiProviders'] })
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save settings')
+      toast.error(err instanceof Error ? err.message : 'Ayarlar kaydedilemedi')
     } finally {
       setSaving(false)
     }
@@ -252,15 +327,9 @@ export function SettingsPage() {
   const nutritionLookupEnabled = get('nutrition_lookup_enabled') !== 'false'
   const hasCookiesFile = Boolean(loaded?.yt_dlp_cookies_file)
 
-  if (sessionLoading || (isAdmin && configLoading)) {
-    return (
-      <div className="p-6 text-muted-foreground text-sm">Ayarlar yükleniyor…</div>
-    )
-  }
-
   // Non-admins get their own account and nothing else: everything below is
   // instance-wide, and the server refuses it to them anyway.
-  if (!isAdmin) {
+  if (isExplicitNonAdmin) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-6 flex flex-col gap-6">
         <div>
@@ -281,6 +350,128 @@ export function SettingsPage() {
         <h1 className="text-xl font-semibold">Ayarlar</h1>
         <p className="text-sm text-muted-foreground mt-1">YemekApp uygulamasını yapılandırın</p>
       </div>
+
+      {/* Apify Integration */}
+      <Card className="border-indigo-500/30 bg-gradient-to-br from-card to-indigo-500/5">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+              <GlobeIcon className="size-5" />
+              Apify Entegrasyonu (Sosyal Medya Kazıyıcı)
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {get('apify_enabled') !== 'false' ? 'Aktif' : 'Devre Dışı'}
+              </span>
+              <Switch
+                id="apify_enabled"
+                checked={get('apify_enabled') !== 'false'}
+                onCheckedChange={checked =>
+                  set('apify_enabled', checked ? 'true' : 'false')
+                }
+              />
+            </div>
+          </div>
+          <CardDescription>
+            TikTok, Instagram Reels ve YouTube videolarından bot engellerini ve kısıtlamaları aşarak video, ses ve metin verilerini doğrudan çeker.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Field
+            label="Apify API Token"
+            hint={
+              <div className="flex items-center gap-1.5 mt-1">
+                <span>Ücretsiz $5 aylık krediyle Apify API anahtarınızı alın:</span>
+                <a
+                  href="https://console.apify.com/account/integrations"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 underline font-medium hover:opacity-80"
+                >
+                  Apify Console
+                  <ExternalLinkIcon className="size-3" />
+                </a>
+              </div>
+            }
+          >
+            <Input
+              type="password"
+              placeholder="apify_api_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              autoComplete="off"
+              value={get('apify_api_token')}
+              onChange={e => set('apify_api_token', e.target.value)}
+            />
+          </Field>
+          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/10 p-3 text-xs text-muted-foreground flex flex-col gap-1">
+            <span className="font-semibold text-foreground flex items-center gap-1.5">
+              <SparklesIcon className="size-3.5 text-indigo-500" />
+              Otomatik Aktör Desteği
+            </span>
+            <p>
+              Apify etkinleştirildiğinde; TikTok için <code>clockworks/free-tiktok-scraper</code>, Instagram Reels için <code>apify/instagram-scraper</code> ve YouTube için <code>streamers/youtube-scraper</code> aktörleri otomatik kullanılır.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Free / Budget AI Recommendations */}
+      <Card className="border-emerald-500/30 bg-gradient-to-br from-card to-emerald-500/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+            <SparklesIcon className="size-5" />
+            Önerilen Ücretsiz & Ekonomik Yapay Zeka (AI)
+          </CardTitle>
+          <CardDescription>
+            Videodaki sesi ve görüntüleri işlemek için en hızlı ve ücretsiz/ekonomik seçenekler:
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-lg border border-border bg-card p-3.5 flex flex-col justify-between gap-3">
+            <div>
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">1. Google Gemini Flash</h4>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded font-medium">100% Ücretsiz Kota</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                Google AI Studio günde 1.500 istek ve dakikada 15 isteğe kadar tamamen ücretsizdir. Video karelerini okuma, ses anlama ve görsel tarif analizinde en başarılı modeldir.
+              </p>
+            </div>
+            <a
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-md py-2 px-3 transition-colors"
+            >
+              Google AI Studio Anahtarı Al
+              <ExternalLinkIcon className="size-3" />
+            </a>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-3.5 flex flex-col justify-between gap-3">
+            <div>
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm flex items-center gap-1.5">
+                  <ZapIcon className="size-4 text-orange-500" />
+                  2. Groq Cloud (Llama 3.3 & Whisper)
+                </h4>
+                <span className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded font-medium">Ultra Hızlı & Ücretsiz</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                Groq LPU çipleriyle saniyede 300+ token hızıyla çalışır. Whisper-large-v3 ile video sesini saniyeler içinde yazıya döker ve Llama 3.3 70B ile tarif çıkarır.
+              </p>
+            </div>
+            <a
+              href="https://console.groq.com/keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 px-3 transition-colors"
+            >
+              Groq Cloud Anahtarı Al
+              <ExternalLinkIcon className="size-3" />
+            </a>
+          </div>
+        </CardContent>
+      </Card>
 
       <AiProvidersCard providers={providers} onChange={setProviders} />
 

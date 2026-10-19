@@ -110,6 +110,10 @@ DEFAULT_CONFIG = {
     "yt_dlp_cookies_file": "",
     "yt_dlp_cookies_browser": "",
     "max_concurrent_jobs": "3",
+    "apify_api_token": "",
+    "apify_enabled": "true",
+    "groq_api_key": "",
+    "groq_model": "llama-3.3-70b-versatile",
     # Web Push signing pair. Never edited in Settings and never committed:
     # ui/push.py generates one on first use, or reads it from the environment.
     "vapid_public_key": "",
@@ -360,6 +364,22 @@ class Config:
             return max(1, min(16, int(raw)))
         except (TypeError, ValueError):
             return 3
+
+    @property
+    def APIFY_API_TOKEN(self) -> str:
+        return self._get('apify_api_token', DEFAULT_CONFIG.get('apify_api_token', ''))
+
+    @property
+    def APIFY_ENABLED(self) -> bool:
+        return _truthy(self._get('apify_enabled', DEFAULT_CONFIG.get('apify_enabled', 'false')))
+
+    @property
+    def GROQ_API_KEY(self) -> str:
+        return self._get('groq_api_key', DEFAULT_CONFIG.get('groq_api_key', ''))
+
+    @property
+    def GROQ_MODEL(self) -> str:
+        return self._get('groq_model', DEFAULT_CONFIG.get('groq_model', 'llama-3.3-70b-versatile'))
 
     def reload(self):
         """Reload configuration from database."""
